@@ -158,3 +158,50 @@ class ChainApiProvider(AbstractBlockchainProvider):
     def _get(self, url):
         response = yield from aiohttp.request('GET', self._base_url + url, auth=self._auth, loop=self._loop)
         return (yield from response.read())
+
+
+class InsightApiProvider(AbstractBlockchainProvider):
+    def __init__(self, base_url, loop):
+        self._base_url = base_url
+        self._loop = loop
+
+    @asyncio.coroutine
+    def _get(self, url):
+        response = yield from aiohttp.request('GET', self._base_url + url, loop=self._loop)
+        return (yield from response.read())
+
+    @asyncio.coroutine
+    def list_unspent(self, bitcoin_addresses, *args, **kwargs):
+        response = yield from self._get('api/addrs/{addresses}/utxo?noCache=1'.format(addresses=','.join(bitcoin_addresses)))
+        data = json.loads(str(response, 'utf-8'))
+
+        return [{
+            'outpoint': bitcoin.core.COutPoint(bitcoin.core.lx(item['txid']), item['vout']),
+            'confirmations': item['confirmations']}
+            for item in data]
+
+    @asyncio.coroutine
+    def get_transaction(self, transaction_hash, *args, **kwargs):
+        print('get_transaction')
+        response = yield from self._get('api/tx/{hash}'.format(hash=bitcoin.core.b2lx(transaction_hash)))
+        data = json.loads(str(response, 'utf-8'))
+
+        return bitcoin.core.CTransaction(
+            vin=[bitcoin.core.CTxIn(
+                prevout=bitcoin.core.COutPoint(bitcoin.core.lx(input['txid']), input['n']),
+            )
+            for input in data['vin']],
+            vout=[bitcoin.core.CTxOut(
+                nValue=str(int(float(output['value'])*100000000)),#coin value
+                scriptPubKey=bitcoin.core.CScript(bitcoin.core.x(output['scriptPubKey']['hex']))
+            )
+            for output in data['vout']]
+        )
+
+    @asyncio.coroutine
+    def sign_transaction(self, transaction, *args, **kwargs):
+        raise NotImplementedError("This blockchain provider does not support signing a transaction.")
+
+    @asyncio.coroutine
+    def send_transaction(self, transaction, *args, **kwargs):
+        raise NotImplementedError("This blockchain provider does not support signing a transaction.")

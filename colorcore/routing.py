@@ -102,6 +102,10 @@ class Configuration():
                 fallback = colorcore.providers.BitcoinCoreProvider(rpc_url)
 
                 return colorcore.providers.ChainApiProvider(base_url, api_key, api_secret, fallback, loop)
+        elif self.blockchain_provider == 'insight':
+            # Insight API provider
+            base_url = self.parser['insight']['base-url']
+            return colorcore.providers.InsightApiProvider(base_url,loop)
         else:
             # Bitcoin Core provider
             rpc_url = self.parser['bitcoind']['rpcurl']
