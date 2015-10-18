@@ -182,7 +182,6 @@ class InsightApiProvider(AbstractBlockchainProvider):
 
     @asyncio.coroutine
     def get_transaction(self, transaction_hash, *args, **kwargs):
-        print('get_transaction')
         response = yield from self._get('api/tx/{hash}'.format(hash=bitcoin.core.b2lx(transaction_hash)))
         data = json.loads(str(response, 'utf-8'))
 
