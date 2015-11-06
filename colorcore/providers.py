@@ -187,7 +187,7 @@ class InsightApiProvider(AbstractBlockchainProvider):
 
         return bitcoin.core.CTransaction(
             vin=[bitcoin.core.CTxIn(
-                prevout=bitcoin.core.COutPoint(bitcoin.core.lx(input['txid']), input['n']),
+                prevout=bitcoin.core.COutPoint(bitcoin.core.lx(input['txid']), input['vout']),
             )
             for input in data['vin']],
             vout=[bitcoin.core.CTxOut(
